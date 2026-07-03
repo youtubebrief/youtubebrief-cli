@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0",
+  "bundle": "devrel-research",
+  "status": "sample",
+  "outputs": {
+    "manifest": "https://youtubebrief.com/samples/devrel-research/manifest.json",
+    "combined_markdown": "https://youtubebrief.com/samples/devrel-research/combined.md"
+  },
+  "note": "Small placeholder manifest for repo docs; see public URL for the full synthetic sample."
+}

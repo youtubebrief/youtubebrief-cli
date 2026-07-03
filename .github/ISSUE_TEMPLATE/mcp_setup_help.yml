@@ -1,0 +1,30 @@
+name: MCP setup help
+description: Get help connecting Youtubebrief MCP to Codex or another MCP client
+title: "[mcp]: "
+labels: [mcp, support]
+body:
+  - type: dropdown
+    id: client
+    attributes:
+      label: MCP client
+      options:
+        - Codex
+        - Claude Code
+        - Cursor-style client
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command/config used
+      description: Paste sanitized command or config. Do not include API keys.
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Error output
+      description: Paste sanitized output.
+    validations:
+      required: false

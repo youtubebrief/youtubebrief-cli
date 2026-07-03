@@ -1,0 +1,5 @@
+benchmark/
+test/
+*.log
+.env
+.DS_Store

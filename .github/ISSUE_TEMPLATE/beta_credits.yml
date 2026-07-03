@@ -1,0 +1,31 @@
+name: Beta credits request
+description: Request beta API access or credits
+title: "[beta credits]: "
+labels: [beta-credits]
+body:
+  - type: input
+    id: email
+    attributes:
+      label: Contact email
+      placeholder: you@example.com
+    validations:
+      required: true
+  - type: dropdown
+    id: use_case
+    attributes:
+      label: Primary use case
+      options:
+        - MCP / AI agent workflow
+        - RAG / JSONL pipeline
+        - DevRel / docs / research
+        - Competitive research
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Intended workflow
+      description: Do not include API keys or private video data.
+    validations:
+      required: true

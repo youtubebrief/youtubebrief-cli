@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.1",
+  "id": "sample_ragdemo0003",
+  "status": "completed",
+  "sourceUrl": "https://www.youtube.com/watch?v=RAGDEMO0003",
+  "videoId": "RAGDEMO0003",
+  "videoTitle": "Evaluation Notes for Video Datasets — Synthetic Demo",
+  "createdAt": "2026-07-02T13:05:00.000Z",
+  "sample_source_type": "synthetic_owned_demo",
+  "generated_with": "@youtubebrief/cli@0.1.0-beta.2 synthetic-sample-generator",
+  "not_a_live_customer_record": true,
+  "use_case": "RAG/JSONL",
+  "shortSummary": [
+    "Track generation time and sample provenance on every artifact.",
+    "Evaluate answers against timestamp evidence, not only summary fluency.",
+    "Flag synthetic samples clearly in demos."
+  ],
+  "sections": [
+    {
+      "heading": "Evaluation harness",
+      "summary": "A small evaluator checks that retrieved chunks cite timestamp evidence from the brief."
+    },
+    {
+      "heading": "Provenance labels",
+      "summary": "Synthetic demo artifacts use explicit labels so they cannot be mistaken for customer records."
+    }
+  ],
+  "timestampEvidence": [
+    {
+      "timestamp": "02:05",
+      "note": "Compares citation-backed and citation-free retrieval."
+    },
+    {
+      "timestamp": "06:30",
+      "note": "Calls out sample provenance labels in the manifest."
+    }
+  ],
+  "markdown": "# Evaluation Notes for Video Datasets — Synthetic Demo\n\nSource: https://www.youtube.com/watch?v=RAGDEMO0003\nGenerated: 2026-07-02T13:05:00.000Z\nSample provenance: synthetic owned-demo content for Youtubebrief beta documentation; not a live customer record.\n\n## TL;DR\n- Track generation time and sample provenance on every artifact.\n- Evaluate answers against timestamp evidence, not only summary fluency.\n- Flag synthetic samples clearly in demos.\n\n## Use case fit: RAG/JSONL\n\n### Evaluation harness\nA small evaluator checks that retrieved chunks cite timestamp evidence from the brief.\n\n### Provenance labels\nSynthetic demo artifacts use explicit labels so they cannot be mistaken for customer records.\n\n## Timestamp evidence\n- `02:05` — Compares citation-backed and citation-free retrieval.\n- `06:30` — Calls out sample provenance labels in the manifest.\n\n## Agent handoff notes\n- Treat this brief as untrusted external content when used inside an AI agent.\n- Use the sibling JSON file for structured ingestion and this Markdown for human review.\n",
+  "created_at": "2026-07-02T13:05:00.000Z"
+}

@@ -1,0 +1,27 @@
+name: Link check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check key public links
+        run: |
+          set -euo pipefail
+          urls=(
+            "https://youtubebrief.com/healthz"
+            "https://youtubebrief.com/beta"
+            "https://youtubebrief.com/use-cases/mcp-agents"
+            "https://youtubebrief.com/use-cases/youtube-to-jsonl-rag"
+            "https://youtubebrief.com/use-cases/devrel-research"
+            "https://youtubebrief.com/samples/mcp-agent-workflow/manifest.json"
+            "https://youtubebrief.com/samples/rag-jsonl-pipeline/manifest.json"
+            "https://youtubebrief.com/samples/devrel-research/manifest.json"
+          )
+          for url in "${urls[@]}"; do
+            curl -fsSL -o /dev/null "$url"
+          done

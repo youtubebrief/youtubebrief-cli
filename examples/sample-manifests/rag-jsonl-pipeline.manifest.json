@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "bundle": "rag-jsonl-pipeline",
+  "status": "sample",
+  "outputs": {
+    "manifest": "https://youtubebrief.com/samples/rag-jsonl-pipeline/manifest.json",
+    "jsonl": "https://youtubebrief.com/samples/rag-jsonl-pipeline/videos.jsonl",
+    "combined_markdown": "https://youtubebrief.com/samples/rag-jsonl-pipeline/combined.md"
+  },
+  "note": "Small placeholder manifest for repo docs; see public URL for the full synthetic sample."
+}

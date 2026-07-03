@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "youtubebrief": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "--package", "@youtubebrief/cli@beta", "yb", "mcp"],
+      "env": {
+        "YB_API_KEY": "${YB_API_KEY}"
+      }
+    }
+  }
+}

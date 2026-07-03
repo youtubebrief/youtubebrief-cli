@@ -1,0 +1,62 @@
+{
+  "name": "@youtubebrief/cli",
+  "version": "0.1.0-beta.2",
+  "description": "CLI and local MCP client for turning explicit YouTube URLs into agent-readable Youtubebrief bundles.",
+  "type": "module",
+  "bin": {
+    "yb": "bin/yb.js",
+    "youtubebrief": "bin/youtubebrief.js",
+    "youtubebrief-mcp": "bin/youtubebrief-mcp.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "scripts",
+    "examples",
+    "docs",
+    "README.md",
+    "llms.txt",
+    "SECURITY.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lint": "find bin src test scripts \\( -name '*.js' -o -name '*.mjs' \\) -print0 | xargs -0 -n1 node --check",
+    "test": "node --test test/*.test.mjs",
+    "verify": "npm run lint && npm test",
+    "release:gate": "node scripts/release-gate.mjs",
+    "pack:dry-run": "npm pack --dry-run --json",
+    "prepublishOnly": "npm run verify && npm run release:gate && npm run smoke:pack",
+    "smoke:controlled-paid": "node scripts/controlled-paid-smoke.mjs",
+    "smoke:pack": "node scripts/pack-smoke.mjs",
+    "smoke:global-install": "node scripts/global-install-smoke.mjs",
+    "smoke:production-safe": "node scripts/production-safe-smoke.mjs"
+  },
+  "keywords": [
+    "agent",
+    "batch",
+    "brief",
+    "cli",
+    "markdown",
+    "mcp",
+    "summary",
+    "youtube"
+  ],
+  "author": "Youtubebrief contributors",
+  "license": "MIT",
+  "homepage": "https://github.com/youtubebrief/youtubebrief-cli#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/youtubebrief/youtubebrief-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/youtubebrief/youtubebrief-cli/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "beta",
+    "provenance": true
+  }
+}

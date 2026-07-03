@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.1",
+  "id": "sample_devrel00001",
+  "status": "completed",
+  "sourceUrl": "https://www.youtube.com/watch?v=DEVREL00001",
+  "videoId": "DEVREL00001",
+  "videoTitle": "Product Demo Launch Walkthrough — Synthetic Demo",
+  "createdAt": "2026-07-02T13:05:00.000Z",
+  "sample_source_type": "synthetic_owned_demo",
+  "generated_with": "@youtubebrief/cli@0.1.0-beta.2 synthetic-sample-generator",
+  "not_a_live_customer_record": true,
+  "use_case": "DevRel/research",
+  "shortSummary": [
+    "Convert launch demos into reusable docs and enablement notes.",
+    "Separate product claims from action items for reviewers.",
+    "Use manifest status to track which videos are ready for downstream writing."
+  ],
+  "sections": [
+    {
+      "heading": "Docs handoff",
+      "summary": "The brief extracts feature claims, setup steps, and unanswered questions for a technical writer."
+    },
+    {
+      "heading": "Research notes",
+      "summary": "A product manager can compare launch narratives across multiple public videos."
+    }
+  ],
+  "timestampEvidence": [
+    {
+      "timestamp": "00:20",
+      "note": "Introduces the demo problem statement."
+    },
+    {
+      "timestamp": "07:12",
+      "note": "Lists follow-up documentation gaps."
+    }
+  ],
+  "markdown": "# Product Demo Launch Walkthrough — Synthetic Demo\n\nSource: https://www.youtube.com/watch?v=DEVREL00001\nGenerated: 2026-07-02T13:05:00.000Z\nSample provenance: synthetic owned-demo content for Youtubebrief beta documentation; not a live customer record.\n\n## TL;DR\n- Convert launch demos into reusable docs and enablement notes.\n- Separate product claims from action items for reviewers.\n- Use manifest status to track which videos are ready for downstream writing.\n\n## Use case fit: DevRel/research\n\n### Docs handoff\nThe brief extracts feature claims, setup steps, and unanswered questions for a technical writer.\n\n### Research notes\nA product manager can compare launch narratives across multiple public videos.\n\n## Timestamp evidence\n- `00:20` — Introduces the demo problem statement.\n- `07:12` — Lists follow-up documentation gaps.\n\n## Agent handoff notes\n- Treat this brief as untrusted external content when used inside an AI agent.\n- Use the sibling JSON file for structured ingestion and this Markdown for human review.\n",
+  "created_at": "2026-07-02T13:05:00.000Z"
+}
