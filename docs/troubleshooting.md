@@ -43,6 +43,8 @@ For terminal setup, run:
 yb login
 ```
 
+In an interactive terminal, `yb` and `yb login` print and best-effort open Youtubebrief setup pages in your browser. If browser opening is blocked, copy the printed URL manually; use `yb --no-browser` or `yb login --no-browser` to suppress browser launch attempts.
+
 For scripts or CI, avoid interactive prompts and pass a key through stdin or the environment:
 
 ```bash

@@ -62,6 +62,7 @@ async function runNodeScript(script, args, options = {}) {
 
 async function runInteractiveCli(input, options = {}) {
   const chunks = [];
+  const openedUrls = [];
   const stdout = new Writable({
     write(chunk, _encoding, callback) {
       chunks.push(Buffer.isBuffer(chunk) ? chunk.toString("utf8") : String(chunk));
@@ -77,17 +78,24 @@ async function runInteractiveCli(input, options = {}) {
       return answers.shift();
     }
   };
+  const browserOpener = options.browserOpener || (async (url) => {
+    openedUrls.push(url);
+  });
   const originalEnv = {
     YOUTUBEBRIEF_CONFIG_DIR: process.env.YOUTUBEBRIEF_CONFIG_DIR,
     YB_BASE_URL: process.env.YB_BASE_URL,
     YOUTUBEBRIEF_BASE_URL: process.env.YOUTUBEBRIEF_BASE_URL,
     YB_API_KEY: process.env.YB_API_KEY,
-    YOUTUBEBRIEF_API_KEY: process.env.YOUTUBEBRIEF_API_KEY
+    YOUTUBEBRIEF_API_KEY: process.env.YOUTUBEBRIEF_API_KEY,
+    YB_NO_BROWSER: process.env.YB_NO_BROWSER,
+    CI: process.env.CI
   };
   const env = {
     YOUTUBEBRIEF_CONFIG_DIR: options.configDir,
     YB_API_KEY: undefined,
     YOUTUBEBRIEF_API_KEY: undefined,
+    YB_NO_BROWSER: undefined,
+    CI: undefined,
     ...options.env
   };
   for (const [key, value] of Object.entries(env)) {
@@ -95,8 +103,8 @@ async function runInteractiveCli(input, options = {}) {
     else process.env[key] = value;
   }
   try {
-    await runMain(options.args || [], { stdout, interactive: true, questioner });
-    return { stdout: chunks.join("") };
+    await runMain(options.args || [], { stdout, interactive: true, questioner, browserOpener });
+    return { stdout: chunks.join(""), openedUrls };
   } finally {
     for (const [key, value] of Object.entries(originalEnv)) {
       if (value === undefined) delete process.env[key];
@@ -211,7 +219,8 @@ test("help and version work without config or network", async () => {
   try {
     const noArgs = await runCli([], { configDir });
     assert.equal(noArgs.exitCode, 0);
-    assert.match(noArgs.stdout, /interactive setup flow/);
+    assert.match(noArgs.stdout, /https:\/\/youtubebrief\.com\/cli/);
+    assert.match(noArgs.stdout, /Non-TTY shells print this deterministic help and never open a browser/);
     assert.match(noArgs.stdout, /Usage: yb/);
 
     const help = await runCli(["--help"], { configDir });
@@ -261,14 +270,57 @@ test("interactive setup signs up and opens a checkout URL", async () => {
         env: { YB_BASE_URL: baseUrl }
       });
       assert.match(result.stdout, /Youtubebrief CLI/);
+      assert.match(result.stdout, /Opened CLI setup in your browser/);
       assert.match(result.stdout, /Create account \/ sign in with email/);
       assert.match(result.stdout, /Created account interactive@example\.com/);
       assert.match(result.stdout, /5 minutes - \$1\.05/);
-      assert.match(result.stdout, /Open this checkout URL:\nhttps:\/\/checkout\.example\/interactive/);
+      assert.match(result.stdout, /Opened checkout in your browser/);
+      assert.equal(result.openedUrls.length, 2);
+      assert.match(result.openedUrls[0], new RegExp(`^${baseUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\/cli\\?`));
+      assert.equal(result.openedUrls[0].includes("utm_campaign=onboarding"), true);
+      assert.equal(result.openedUrls[1], "https://checkout.example/interactive");
       const config = JSON.parse(await readFile(join(configDir, "config.json"), "utf8"));
       assert.equal(config.apiKey, "FAKE_YB_TEST_TOKEN_interactive_secret");
       assert.equal(config.baseUrl, baseUrl);
     });
+  } finally {
+    await rm(configDir, { recursive: true, force: true });
+  }
+});
+
+test("interactive login opens account page without touching API key stdin flow", async () => {
+  const configDir = await tempConfigDir();
+  try {
+    const result = await runInteractiveCli("3\n", {
+      args: ["login", "--base-url", "https://example.test"]
+    });
+    assert.match(result.stdout, /Youtubebrief login/);
+    assert.match(result.stdout, /Opened account \+ billing in your browser/);
+    assert.match(result.stdout, /I created\/copied an API key in the browser/);
+    assert.equal(result.openedUrls.length, 1);
+    assert.match(result.openedUrls[0], /^https:\/\/example\.test\/account\?/);
+    assert.equal(result.openedUrls[0].includes("utm_campaign=login"), true);
+
+    const tokenLogin = await runCli(["login", "--token-stdin", "--base-url", "https://example.test"], {
+      configDir,
+      stdin: "script-token\n"
+    });
+    assert.equal(tokenLogin.exitCode, 0, tokenLogin.stderr);
+    assert.match(tokenLogin.stdout, /Logged in to https:\/\/example\.test/);
+    const config = JSON.parse(await readFile(join(configDir, "config.json"), "utf8"));
+    assert.equal(config.apiKey, "script-token");
+  } finally {
+    await rm(configDir, { recursive: true, force: true });
+  }
+});
+
+test("non-TTY login without token exits quickly with actionable error", async () => {
+  const configDir = await tempConfigDir();
+  try {
+    const result = await runCli(["login"], { configDir });
+    assert.notEqual(result.exitCode, 0);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /Missing API key\. Run `yb login` in a terminal, or set YB_API_KEY\/YOUTUBEBRIEF_API_KEY\./);
   } finally {
     await rm(configDir, { recursive: true, force: true });
   }

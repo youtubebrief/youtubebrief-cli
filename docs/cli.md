@@ -15,7 +15,7 @@ yb --help
 yb doctor
 ```
 
-`yb` with no subcommand opens an interactive terminal setup flow. Use it for first-run account setup, checking credits, buying beta credit packs when enabled, trying a no-spend dry run, and printing Codex MCP setup commands. In scripts and CI, keep using explicit subcommands.
+`yb` with no subcommand opens a browser-assisted interactive terminal setup flow. It prints and best-effort opens <https://youtubebrief.com/cli> for first-run account setup, checking credits, buying beta credit packs when enabled, trying a no-spend dry run, and printing Codex MCP setup commands. In scripts, CI, pipes, and MCP hosts, keep using explicit subcommands; non-TTY commands do not prompt or open a browser.
 
 ## Common commands
 
@@ -52,6 +52,8 @@ yb login
 # or, for scripts:
 printf "%s\n" "$YB_API_KEY" | yb login --token-stdin
 ```
+
+`yb login` opens <https://youtubebrief.com/account> only in an interactive terminal. Use `--no-browser` to print the URL without launching a browser.
 
 Check and buy credits when checkout is enabled for your account:
 

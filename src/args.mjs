@@ -6,6 +6,7 @@ export function parseArgs(argv) {
   const args = [...argv];
   if (args.length === 0) return { command: 'interactive' };
   const first = args[0];
+  if (first === '--no-browser') return { command: 'interactive', noBrowser: true };
   if (first === '--help' || first === '-h' || first === 'help') return { command: 'help' };
   if (first === '--version' || first === '-v' || first === 'version') return { command: 'version' };
   if (first === 'login') return parseLogin(args.slice(1));
@@ -32,6 +33,7 @@ function parseLogin(args) {
     if (arg === '--api-key') result.apiKey = readValue(args, ++index, arg);
     else if (arg === '--token-stdin') result.tokenStdin = true;
     else if (arg === '--base-url') result.baseUrl = readValue(args, ++index, arg);
+    else if (arg === '--no-browser') result.noBrowser = true;
     else if (arg === '--help' || arg === '-h') return { command: 'help', topic: 'login' };
     else throw new CliError(`Unknown login option: ${arg}`);
   }
@@ -59,6 +61,7 @@ function parseBuy(args) {
     if (arg === '--minutes') result.minutes = readBillingMinutes(readValue(args, ++index, arg), arg);
     else if (arg === '--api-key') result.apiKey = readValue(args, ++index, arg);
     else if (arg === '--base-url') result.baseUrl = readValue(args, ++index, arg);
+    else if (arg === '--no-browser') result.noBrowser = true;
     else if (arg === '--help' || arg === '-h') return { command: 'help', topic: 'buy' };
     else if (arg.startsWith('-')) throw new CliError(`Unknown buy option: ${arg}`);
     else positionals.push(arg);

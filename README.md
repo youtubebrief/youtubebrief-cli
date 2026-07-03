@@ -25,7 +25,7 @@ yb --help
 yb doctor
 ```
 
-Running `yb` with no subcommand opens a Codex-style interactive setup flow in a terminal. It can create/sign in to a beta account, show credit packages when available for your account, open a hosted checkout URL, run a no-spend dry run, and print Codex MCP setup commands.
+Running `yb` with no subcommand opens a Codex-style interactive setup flow in a real terminal. It prints and best-effort opens <https://youtubebrief.com/cli>, then guides account setup, API-key storage, credit checks, hosted checkout links when enabled for your account, a no-spend dry run, and Codex MCP setup commands. In CI, pipes, and other non-TTY hosts, it prints deterministic help and never opens a browser.
 
 Run without global install:
 
@@ -87,6 +87,7 @@ You should see the configured MCP server. See [`docs/codex-mcp.md`](docs/codex-m
 Youtubebrief CLI/MCP is in beta.
 
 - Public npm install is available.
+- Browser-assisted setup starts at <https://youtubebrief.com/cli>.
 - Credits/API access is handled through the beta access and credits request flow.
 - The interactive `yb` setup flow can create/sign in to a beta account and, when enabled for that account, print hosted checkout URLs from `yb buy <5|10|30|60>`.
 - Use `@beta` in install commands for now.

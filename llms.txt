@@ -56,8 +56,11 @@ Tool results should stay concise and path/manifest-oriented. Use
 ## Security and billing rules
 
 - Do not place API keys in prompts, manifest files, command examples, or logs.
-- Prefer `YOUTUBEBRIEF_API_KEY`, interactive `yb login`, or stored
+- Prefer `YOUTUBEBRIEF_API_KEY`, browser-assisted interactive `yb login`, or stored
   `yb login --token-stdin` credentials.
+- Interactive `yb`/`yb login` may print and best-effort open
+  `https://youtubebrief.com/cli` or `/account`; non-TTY commands must stay
+  deterministic and never launch a browser.
 - For controlled paid validation, use `npm run smoke:controlled-paid` only with
   explicit `YB_CONTROLLED_PAID_SMOKE=1` and test-account credits; inspect the
   redacted report instead of raw provider output.

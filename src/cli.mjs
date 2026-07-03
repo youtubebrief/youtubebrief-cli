@@ -1,3 +1,4 @@
+import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
@@ -17,9 +18,10 @@ export async function main(argv, io = {}) {
   const stdin = io.stdin || process.stdin;
   const interactive = io.interactive ?? Boolean(stdin.isTTY && stdout.isTTY);
   const questioner = io.questioner;
+  const browserOpener = io.browserOpener;
   const parsed = parseArgs(argv);
 
-  if (parsed.command === 'interactive') return interactiveHome(parsed, { stdin, stdout, interactive, questioner });
+  if (parsed.command === 'interactive') return interactiveHome(parsed, { stdin, stdout, interactive, questioner, browserOpener });
   if (parsed.command === 'help') {
     stdout.write(helpText(parsed.topic));
     return;
@@ -28,9 +30,9 @@ export async function main(argv, io = {}) {
     stdout.write(`${await readVersion()}\n`);
     return;
   }
-  if (parsed.command === 'login') return login(parsed, { stdin, stdout, interactive, questioner });
+  if (parsed.command === 'login') return login(parsed, { stdin, stdout, interactive, questioner, browserOpener });
   if (parsed.command === 'signup') return signup(parsed, { stdout });
-  if (parsed.command === 'buy') return buy(parsed, { stdout });
+  if (parsed.command === 'buy') return buy(parsed, { stdout, interactive, browserOpener });
   if (parsed.command === 'logout') return logout({ stdout });
   if (parsed.command === 'whoami') return whoami(parsed, { stdout });
   if (parsed.command === 'credits') return credits(parsed, { stdout });
@@ -44,9 +46,9 @@ export async function main(argv, io = {}) {
   throw new CliError(`Unknown command: ${parsed.command}`);
 }
 
-async function login(options, { stdin, stdout, interactive = false, questioner }) {
+async function login(options, { stdin, stdout, interactive = false, questioner, browserOpener }) {
   if (!options.apiKey && !options.tokenStdin && interactive) {
-    return interactiveLogin(options, { stdin, stdout, questioner });
+    return interactiveLogin(options, { stdin, stdout, questioner, browserOpener });
   }
   let apiKey = options.apiKey;
   if (options.tokenStdin) {
@@ -76,13 +78,23 @@ function resolveAuthBaseUrl(options, existing = {}, env = process.env) {
   return normalizeBaseUrl(options.baseUrl || env.YB_BASE_URL || env.YOUTUBEBRIEF_BASE_URL || existing.baseUrl || DEFAULT_BASE_URL);
 }
 
-async function buy(options, { stdout }) {
+async function buy(options, { stdout, interactive = false, browserOpener }) {
   const config = await resolveConfig(options);
   if (!config.apiKey) throw new CliError('Missing API key. Run `yb login` in a terminal, or `yb signup --email you@example.com`.');
   const client = new YoutubebriefClient(config);
   const payload = await client.createCheckout({ minutes: options.minutes });
   if (payload.checkoutUrl) {
-    stdout.write(`${payload.checkoutUrl}\n`);
+    if (!interactive) {
+      stdout.write(`${payload.checkoutUrl}\n`);
+      return;
+    }
+    await presentBrowserUrl(payload.checkoutUrl, {
+      stdout,
+      interactive,
+      browserOpener,
+      noBrowser: options.noBrowser,
+      label: 'checkout'
+    });
     return;
   }
   stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
@@ -128,7 +140,7 @@ async function credits(options, { stdout }) {
   }
 }
 
-async function interactiveHome(options, { stdin, stdout, interactive, questioner }) {
+async function interactiveHome(options, { stdin, stdout, interactive, questioner, browserOpener }) {
   if (!interactive) {
     stdout.write(helpText());
     return;
@@ -136,7 +148,18 @@ async function interactiveHome(options, { stdin, stdout, interactive, questioner
   const rl = questioner || createPromptInterface({ stdin, stdout });
   try {
     stdout.write('Youtubebrief CLI\n\n');
-    stdout.write('If no subcommand is specified, yb opens this interactive setup flow.\n');
+    const setupUrl = buildSiteUrl(options, '/cli', {
+      utm_source: 'cli',
+      utm_medium: 'terminal',
+      utm_campaign: 'onboarding'
+    });
+    await presentBrowserUrl(setupUrl, {
+      stdout,
+      interactive,
+      browserOpener,
+      noBrowser: options.noBrowser,
+      label: 'CLI setup'
+    });
     while (true) {
       const config = await resolveConfig(options);
       if (!config.apiKey) {
@@ -147,7 +170,7 @@ async function interactiveHome(options, { stdin, stdout, interactive, questioner
         stdout.write('  4. Show help\n');
         stdout.write('  5. Quit\n');
         const choice = await askChoice(rl, 'Choose an option: ', ['1', '2', '3', '4', '5']);
-        if (choice === '1') await interactiveSignup(options, { rl, stdout });
+        if (choice === '1') await interactiveSignup(options, { rl, stdout, browserOpener });
         else if (choice === '2') await interactiveExistingKeyHelp({ stdout });
         else if (choice === '3') await interactiveDryRun(options, { rl, stdout });
         else if (choice === '4') stdout.write(`\n${helpText()}`);
@@ -162,7 +185,7 @@ async function interactiveHome(options, { stdin, stdout, interactive, questioner
         stdout.write('  6. Quit\n');
         const choice = await askChoice(rl, 'Choose an option: ', ['1', '2', '3', '4', '5', '6']);
         if (choice === '1') await interactiveCredits(options, { stdout });
-        else if (choice === '2') await interactiveBuy(options, { rl, stdout });
+        else if (choice === '2') await interactiveBuy(options, { rl, stdout, browserOpener });
         else if (choice === '3') await interactiveBrief(options, { rl, stdout });
         else if (choice === '4') await interactiveCodexMcp({ stdout });
         else if (choice === '5') stdout.write(`\n${helpText()}`);
@@ -174,31 +197,43 @@ async function interactiveHome(options, { stdin, stdout, interactive, questioner
   }
 }
 
-async function interactiveLogin(options, { stdin, stdout, questioner }) {
+async function interactiveLogin(options, { stdin, stdout, questioner, browserOpener }) {
   const rl = questioner || createPromptInterface({ stdin, stdout });
   try {
     stdout.write('Youtubebrief login\n\n');
-    stdout.write('  1. Create account / sign in with email\n');
-    stdout.write('  2. Use an existing API key\n');
+    const accountUrl = buildSiteUrl(options, '/account', {
+      utm_source: 'cli',
+      utm_medium: 'terminal',
+      utm_campaign: 'login'
+    });
+    await presentBrowserUrl(accountUrl, {
+      stdout,
+      interactive: true,
+      browserOpener,
+      noBrowser: options.noBrowser,
+      label: 'account + billing'
+    });
+    stdout.write('  1. I created/copied an API key in the browser\n');
+    stdout.write('  2. Create account directly in terminal\n');
     stdout.write('  3. Cancel\n');
     const choice = await askChoice(rl, 'Choose an option: ', ['1', '2', '3']);
-    if (choice === '1') return interactiveSignup(options, { rl, stdout });
-    if (choice === '2') return interactiveExistingKeyHelp({ stdout });
+    if (choice === '1') return interactiveExistingKeyHelp({ stdout });
+    if (choice === '2') return interactiveSignup(options, { rl, stdout, browserOpener });
   } finally {
     if (!questioner) rl.close();
   }
 }
 
-async function interactiveSignup(options, { rl, stdout }) {
+async function interactiveSignup(options, { rl, stdout, browserOpener }) {
   const email = await askNonEmpty(rl, 'Email: ');
   await signup({ ...options, email }, { stdout });
   if (await askYesNo(rl, 'Buy credits now? [Y/n] ', true)) {
-    await interactiveBuy(options, { rl, stdout });
+    await interactiveBuy(options, { rl, stdout, browserOpener });
   }
 }
 
 async function interactiveExistingKeyHelp({ stdout }) {
-  stdout.write('\nFor existing API keys, use the non-echoing stdin flow so the key is not saved in shell history:\n\n');
+  stdout.write('\nAfter copying your API key from the browser, store it locally with the non-echoing stdin flow:\n\n');
   stdout.write('  printf "%s\\n" "$YB_API_KEY" | yb login --token-stdin\n\n');
   stdout.write('Or set YB_API_KEY for a single shell/session.\n');
 }
@@ -211,7 +246,7 @@ async function interactiveCredits(options, { stdout }) {
   }
 }
 
-async function interactiveBuy(options, { rl, stdout }) {
+async function interactiveBuy(options, { rl, stdout, browserOpener }) {
   const packages = await loadCreditPackages(options, { stdout });
   stdout.write('\nBuy credits:\n');
   for (const [index, pack] of packages.entries()) {
@@ -230,8 +265,12 @@ async function interactiveBuy(options, { rl, stdout }) {
     }
     const payload = await new YoutubebriefClient(config).createCheckout({ minutes: pack.minutes });
     if (payload.checkoutUrl) {
-      stdout.write('\nOpen this checkout URL:\n');
-      stdout.write(`${payload.checkoutUrl}\n`);
+      await presentBrowserUrl(payload.checkoutUrl, {
+        stdout,
+        interactive: true,
+        browserOpener,
+        label: 'checkout'
+      });
     } else {
       stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
     }
@@ -281,6 +320,57 @@ async function interactiveCodexMcp({ stdout }) {
   stdout.write('\nAdd Youtubebrief to Codex MCP:\n\n');
   stdout.write('  codex mcp add youtubebrief -- npx -y --package @youtubebrief/cli@beta yb mcp\n\n');
   stdout.write('For paid MCP tools, run `yb login` first or forward YB_API_KEY in ~/.codex/config.toml.\n');
+}
+
+async function presentBrowserUrl(url, { stdout, interactive = false, browserOpener, noBrowser = false, label = 'page' } = {}) {
+  if (shouldOpenBrowser({ interactive, noBrowser })) {
+    try {
+      await openBrowser(url, { browserOpener });
+      stdout.write(`Opened ${label} in your browser.\n`);
+      stdout.write(`If it did not open, visit:\n${url}\n\n`);
+      return true;
+    } catch (error) {
+      stdout.write(`Could not open ${label} automatically. Visit:\n${url}\n`);
+      stdout.write(`Reason: ${error.message}\n\n`);
+      return false;
+    }
+  }
+  stdout.write(`Open ${label}:\n${url}\n\n`);
+  return false;
+}
+
+function shouldOpenBrowser({ interactive = false, noBrowser = false } = {}) {
+  if (!interactive || noBrowser) return false;
+  const noBrowserEnv = String(process.env.YB_NO_BROWSER || '').trim().toLowerCase();
+  if (process.env.CI || noBrowserEnv === '1' || noBrowserEnv === 'true') return false;
+  return true;
+}
+
+function openBrowser(url, { browserOpener } = {}) {
+  if (browserOpener) return browserOpener(url);
+  const command = process.platform === 'darwin'
+    ? 'open'
+    : process.platform === 'win32'
+      ? 'cmd'
+      : 'xdg-open';
+  const args = process.platform === 'win32'
+    ? ['/c', 'start', '', url]
+    : [url];
+  return new Promise((resolve, reject) => {
+    execFile(command, args, { timeout: 3000, windowsHide: true }, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
+
+function buildSiteUrl(options = {}, pathname = '/', params = {}) {
+  const baseUrl = resolveAuthBaseUrl(options);
+  const url = new URL(pathname, `${baseUrl}/`);
+  for (const [key, value] of Object.entries(params)) {
+    if (value) url.searchParams.set(key, value);
+  }
+  return url.toString();
 }
 
 async function loadCreditPackages(options, { stdout }) {
@@ -576,13 +666,13 @@ async function readVersion() {
 
 function helpText(topic) {
   if (topic === 'login') {
-    return `Usage: yb login [--token-stdin] [--base-url <url>]\n\nIn a terminal, opens an interactive login flow. For scripts, pass an API key with --token-stdin so it is not saved in shell history.\n`;
+    return `Usage: yb login [--token-stdin] [--base-url <url>] [--no-browser]\n\nIn a terminal, opens youtubebrief.com account setup in your browser and guides API-key storage. For scripts, pass an API key with --token-stdin so it is not saved in shell history.\n`;
   }
   if (topic === 'signup') {
     return `Usage: yb signup --email <email> [--base-url <url>]\n\nCreates an account, stores the returned API key locally, and prepares CLI billing.\n`;
   }
   if (topic === 'buy') {
-    return `Usage: yb buy <5|10|30|60> [--base-url <url>]\n\nCreates a hosted checkout link for a prepaid minute pack. Use YB_API_KEY or stored login for auth.\n`;
+    return `Usage: yb buy <5|10|30|60> [--base-url <url>] [--no-browser]\n\nCreates a hosted checkout link for a prepaid minute pack. Interactive terminals open the link in a browser; scripts print the URL. Use YB_API_KEY or stored login for auth.\n`;
   }
   if (topic === 'doctor') {
     return `Usage: yb doctor [--base-url <url>] [--out-dir <dir>]\n\nChecks Node version, config path, base URL, auth state, privacy-safe telemetry preference, /healthz reachability, credits endpoint, and optional output-directory write access without printing secrets. Use YB_API_KEY or stored login for auth.\n`;
@@ -605,5 +695,5 @@ function helpText(topic) {
   if (topic === 'mcp') {
     return `Usage: yb mcp\n\nStarts the local stdio Model Context Protocol server. Logs go to stderr; stdout is reserved for JSON-RPC MCP messages only. Prefer YB_API_KEY for MCP credentials.\n`;
   }
-  return `Youtubebrief CLI\n\nIf no subcommand is specified, yb opens an interactive setup flow in a terminal.\n\nUsage: yb <youtube-url> [options]\n  yb\n  yb brief <youtube-url> [--minutes 5|10|30|60] [--format markdown|json] [--output <path|->]\n  yb batch --out-dir <dir> [--input <file>] [--allow-partial] [--combined-md] [--jsonl] <youtube-url...>\n  yb export --from <out-dir> --format combined-md|jsonl [--output <path|->]\n  yb schema manifest\n  yb mcp\n  yb doctor [--out-dir <dir>]\n  yb login [--token-stdin] [--base-url <url>]\n  yb signup --email <email>\n  yb buy <5|10|30|60>\n  yb credits\n  yb config get [base-url|api-key|config-path|telemetry]\n  yb config set base-url <url>\n  yb config set telemetry on|off\n  yb logout\n  yb whoami\n  yb --help\n  yb --version\n\nOptions:\n  --api-key <token>       Supported for one-off local use, but prefer YB_API_KEY or --token-stdin to avoid shell history/process-argv exposure.\n  --base-url <url>       Override API base URL (default: ${DEFAULT_BASE_URL}).\n  --format <type>        Output format: markdown or json.\n  --output <path|->      Write output to a file or stdout.\n  --timeout-ms <ms>      Polling timeout for brief creation.\n  --wait / --no-wait     Wait for async brief completion (default: wait).\n\nEnvironment:\n  YB_API_KEY\n  YB_BASE_URL\n  YOUTUBEBRIEF_API_KEY\n  YOUTUBEBRIEF_BASE_URL\n  YOUTUBEBRIEF_CONFIG_DIR\n  YB_TELEMETRY=0 or YOUTUBEBRIEF_TELEMETRY=0 to opt out\n`;
+  return `Youtubebrief CLI\n\nIf no subcommand is specified, yb opens https://youtubebrief.com/cli in an interactive terminal and shows a browser-assisted setup flow. Non-TTY shells print this deterministic help and never open a browser.\n\nUsage: yb <youtube-url> [options]\n  yb [--no-browser]\n  yb brief <youtube-url> [--minutes 5|10|30|60] [--format markdown|json] [--output <path|->]\n  yb batch --out-dir <dir> [--input <file>] [--allow-partial] [--combined-md] [--jsonl] <youtube-url...>\n  yb export --from <out-dir> --format combined-md|jsonl [--output <path|->]\n  yb schema manifest\n  yb mcp\n  yb doctor [--out-dir <dir>]\n  yb login [--token-stdin] [--base-url <url>] [--no-browser]\n  yb signup --email <email>\n  yb buy <5|10|30|60> [--no-browser]\n  yb credits\n  yb config get [base-url|api-key|config-path|telemetry]\n  yb config set base-url <url>\n  yb config set telemetry on|off\n  yb logout\n  yb whoami\n  yb --help\n  yb --version\n\nOptions:\n  --api-key <token>       Supported for one-off local use, but prefer YB_API_KEY or --token-stdin to avoid shell history/process-argv exposure.\n  --base-url <url>       Override API base URL (default: ${DEFAULT_BASE_URL}).\n  --no-browser           Do not attempt to open browser pages from interactive setup/login/buy flows.\n  --format <type>        Output format: markdown or json.\n  --output <path|->      Write output to a file or stdout.\n  --timeout-ms <ms>      Polling timeout for brief creation.\n  --wait / --no-wait     Wait for async brief completion (default: wait).\n\nEnvironment:\n  YB_API_KEY\n  YB_BASE_URL\n  YOUTUBEBRIEF_API_KEY\n  YOUTUBEBRIEF_BASE_URL\n  YOUTUBEBRIEF_CONFIG_DIR\n  YB_NO_BROWSER=1 to suppress browser opening\n  YB_TELEMETRY=0 or YOUTUBEBRIEF_TELEMETRY=0 to opt out\n`;
 }
