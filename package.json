@@ -1,6 +1,6 @@
 {
   "name": "@youtubebrief/cli",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "description": "CLI and local MCP client for turning explicit YouTube URLs into agent-readable Youtubebrief bundles.",
   "type": "module",
   "bin": {

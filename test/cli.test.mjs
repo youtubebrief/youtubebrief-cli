@@ -211,7 +211,7 @@ test("release:gate passes beta prepublish metadata and docs guards", async () =>
   const result = await runNodeScript(join(ROOT, "scripts", "release-gate.mjs"), []);
   assert.equal(result.exitCode, 0, result.stderr);
   const report = JSON.parse(result.stdout);
-  assert.deepEqual(report, { ok: true, package: "@youtubebrief/cli", version: "0.1.0-beta.2", tag: "beta" });
+  assert.deepEqual(report, { ok: true, package: "@youtubebrief/cli", version: "0.1.0-beta.3", tag: "beta" });
 });
 
 test("help and version work without config or network", async () => {
@@ -314,13 +314,17 @@ test("interactive login opens account page without touching API key stdin flow",
   }
 });
 
-test("non-TTY login without token exits quickly with actionable error", async () => {
+test("non-TTY login prints deterministic browser setup instructions", async () => {
   const configDir = await tempConfigDir();
   try {
-    const result = await runCli(["login"], { configDir });
-    assert.notEqual(result.exitCode, 0);
-    assert.equal(result.stdout, "");
-    assert.match(result.stderr, /Missing API key\. Run `yb login` in a terminal, or set YB_API_KEY\/YOUTUBEBRIEF_API_KEY\./);
+    const result = await runCli(["login", "--base-url", "https://example.test"], { configDir });
+    assert.equal(result.exitCode, 0, result.stderr);
+    assert.match(result.stdout, /Youtubebrief login/);
+    assert.match(result.stdout, /Open account \+ billing:/);
+    assert.match(result.stdout, /https:\/\/example\.test\/account\?/);
+    assert.match(result.stdout, /utm_campaign=login/);
+    assert.match(result.stdout, /yb login --token-stdin/);
+    assert.equal(result.stderr, "");
   } finally {
     await rm(configDir, { recursive: true, force: true });
   }

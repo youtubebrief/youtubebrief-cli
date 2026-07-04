@@ -5,7 +5,7 @@
 Source version in this repository:
 
 ```text
-@youtubebrief/cli@0.1.0-beta.2
+@youtubebrief/cli@0.1.0-beta.3
 ```
 
 Verify the currently published beta channel before reporting version-specific issues:

@@ -56,7 +56,7 @@ async function login(options, { stdin, stdout, interactive = false, questioner, 
     apiKey = (await readStdin(stdin)).trim();
   }
   if (!apiKey) {
-    throw new CliError('Missing API key. Run `yb login` in a terminal, or set YB_API_KEY/YOUTUBEBRIEF_API_KEY.');
+    return nonInteractiveLoginHelp(options, { stdout });
   }
   const existing = await readStoredConfig();
   const baseUrl = resolveAuthCommandBaseUrl(options, existing);
@@ -196,6 +196,24 @@ async function interactiveHome(options, { stdin, stdout, interactive, questioner
   } finally {
     if (!questioner) rl.close();
   }
+}
+
+async function nonInteractiveLoginHelp(options, { stdout }) {
+  const accountUrl = buildSiteUrl(options, '/account', {
+    utm_source: 'cli',
+    utm_medium: 'terminal',
+    utm_campaign: 'login'
+  });
+  stdout.write('Youtubebrief login\n\n');
+  await presentBrowserUrl(accountUrl, {
+    stdout,
+    interactive: false,
+    noBrowser: true,
+    label: 'account + billing'
+  });
+  stdout.write('After creating or choosing your account in the browser, store the API key locally with:\n\n');
+  stdout.write('  printf "%s\\n" "$YB_API_KEY" | yb login --token-stdin\n\n');
+  stdout.write('Use `yb login --token-stdin` directly for scripts and CI.\n');
 }
 
 async function interactiveLogin(options, { stdin, stdout, questioner, browserOpener }) {

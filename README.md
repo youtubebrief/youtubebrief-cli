@@ -3,7 +3,7 @@
 🌐 Browser for account and billing.  
 ⌨️ Terminal for clean YouTube briefs.
 
-Youtubebrief turns explicit YouTube URLs into structured, timestamp-backed Markdown for research, notes, DevRel handoffs, and AI-agent workflows.
+Youtubebrief turns explicit YouTube URLs into structured, timestamp-backed Markdown and agent-readable brief bundles for research, notes, DevRel handoffs, and AI-agent workflows.
 
 It is **not** a generic consumer YouTube summarizer. It is a CLI/MCP beta for developers, researchers, DevRel teams, RAG pipelines, and local agent workflows.
 
@@ -33,7 +33,7 @@ Release/marketing registry verification:
 npm view @youtubebrief/cli@beta version --json
 ```
 
-The source version in this repo is `0.1.0-beta.2`. If registry verification still returns `0.1.0-beta.1`, public npm install works but the npm beta channel is one patch behind this repository.
+The source version in this repo is `0.1.0-beta.3`. If registry verification still returns an older version, public npm install works but the npm beta channel is behind this repository.
 
 ## 🔐 Login and credits
 
@@ -60,7 +60,7 @@ Brief output is Markdown-focused video analysis: title, source, TL;DR, section n
 
 Credits/API access may be required for actual brief generation. During beta, access is handled through beta credits, prepaid minute packs, or operator-assisted rollout depending on availability. Do **not** treat this beta as a full self-serve paid launch until live payment setup is explicitly confirmed.
 
-Request beta access or credits:
+Beta access and credits request flow:
 
 https://youtubebrief.com/beta
 
