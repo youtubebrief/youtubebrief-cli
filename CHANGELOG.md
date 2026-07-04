@@ -7,9 +7,11 @@
 - Clarified that credits/API access remains beta-gated and live payment availability may vary during rollout.
 - Documented why MCP npx examples use the explicit `--package ... yb mcp` form.
 
-## 0.1.0-beta.3 - 2026-07-03
+## 0.1.0-beta.4 - 2026-07-04
 
-Prepared docs/package metadata for public GitHub repo and corrected one-off npx MCP examples to use `npx --package @youtubebrief/cli@beta yb mcp`.
+- Rebuilt the browser-visible login beta for npm trusted publishing.
+- Pinned GitHub Actions publishing to npm 11 for OIDC trusted-publisher compatibility.
+- Prepared docs/package metadata for the public GitHub repo and corrected one-off npx MCP examples to use `npx --package @youtubebrief/cli@beta yb mcp`.
 
 ## 0.1.0-beta.1 - 2026-07-03
 

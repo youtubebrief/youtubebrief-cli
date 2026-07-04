@@ -33,7 +33,7 @@ Release/marketing registry verification:
 npm view @youtubebrief/cli@beta version --json
 ```
 
-The source version in this repo is `0.1.0-beta.3`. If registry verification still returns an older version, public npm install works but the npm beta channel is behind this repository.
+The source version in this repo is `0.1.0-beta.4`. If registry verification still returns an older version, public npm install works but the npm beta channel is behind this repository.
 
 ## 🔐 Login and credits
 

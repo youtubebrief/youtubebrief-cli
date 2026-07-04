@@ -19,6 +19,8 @@ jobs:
         with:
           node-version: '22.14.0'
           registry-url: 'https://registry.npmjs.org'
+      - name: Use npm 11 for trusted publishing
+        run: npm install -g npm@11.11.0
       - name: Show tool versions
         run: |
           node --version

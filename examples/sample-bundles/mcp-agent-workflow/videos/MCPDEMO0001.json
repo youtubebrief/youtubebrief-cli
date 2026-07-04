@@ -7,7 +7,7 @@
   "videoTitle": "Local MCP Agent Setup — Synthetic Demo",
   "createdAt": "2026-07-02T13:05:00.000Z",
   "sample_source_type": "synthetic_owned_demo",
-  "generated_with": "@youtubebrief/cli@0.1.0-beta.3 synthetic-sample-generator",
+  "generated_with": "@youtubebrief/cli@0.1.0-beta.4 synthetic-sample-generator",
   "not_a_live_customer_record": true,
   "use_case": "MCP agent",
   "shortSummary": [
