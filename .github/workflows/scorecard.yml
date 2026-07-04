@@ -9,6 +9,10 @@ on:
 
 permissions:
   contents: read
+  issues: read
+  pull-requests: read
+  checks: read
+  actions: read
   security-events: write
   id-token: write
 
