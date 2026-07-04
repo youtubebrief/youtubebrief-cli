@@ -1,6 +1,7 @@
 # Youtubebrief CLI guidance for LLM agents
 
-Youtubebrief CLI turns explicit YouTube URLs into paid, reproducible brief bundles.
+Youtubebrief CLI/MCP turns explicit YouTube URLs into structured,
+timestamp-backed Markdown and reproducible brief bundles.
 
 This package is a developer/power-user automation surface. Do not imply that the
 public Youtubebrief web UI exposes batch or MCP controls.
@@ -11,20 +12,24 @@ public Youtubebrief web UI exposes batch or MCP controls.
    setup flow for beta account login, credits, checkout when enabled, no-spend
    dry-run, and Codex MCP setup. In scripts and CI, use explicit subcommands
    instead of prompts.
-2. Use `yb batch --dry-run --out-dir <dir> ...` to validate URLs and duplicate
+2. Use `yb credits` to check purchased, consumed, and remaining minutes before
+   paid execution.
+3. Use `yb brief <youtube-url>` for a single timestamp-backed Markdown brief
+   when API access/credits are available.
+4. Use `yb batch --dry-run --out-dir <dir> ...` to validate URLs and duplicate
    handling without API calls or billing.
-3. Use `yb doctor --out-dir <dir>` to check Node/config/base URL/auth/health,
+5. Use `yb doctor --out-dir <dir>` to check Node/config/base URL/auth/health,
    credits, privacy-safe telemetry preference, and output-directory writeability
    without printing secrets.
-4. Use `yb batch --estimate-credits --out-dir <dir> ...` to estimate billable
+6. Use `yb batch --estimate-credits --out-dir <dir> ...` to estimate billable
    items and minute blocks without provider calls or billing.
-5. Use `yb batch --out-dir <dir> --combined-md --jsonl ...` for paid execution.
-6. Use `yb batch --out-dir <dir> --resume` after interruption.
-7. Use `yb batch --out-dir <dir> --retry-provider-errors` for transient provider
+7. Use `yb batch --out-dir <dir> --combined-md --jsonl ...` for paid execution.
+8. Use `yb batch --out-dir <dir> --resume` after interruption.
+9. Use `yb batch --out-dir <dir> --retry-provider-errors` for transient provider
    failures.
-8. Use `yb export --from <dir> --format combined-md|jsonl` to regenerate
+10. Use `yb export --from <dir> --format combined-md|jsonl` to regenerate
    aggregate outputs from an existing bundle without API calls.
-9. If a user opts out of activation telemetry, set `YB_TELEMETRY=0` or run
+11. If a user opts out of activation telemetry, set `YB_TELEMETRY=0` or run
    `yb config set telemetry off`. Telemetry must never include raw URLs,
    transcripts, brief content, tokens, or full local paths.
 

@@ -6,6 +6,15 @@ Youtubebrief exposes a local stdio MCP server through the npm package.
 npx -y --package @youtubebrief/cli@beta yb mcp
 ```
 
+If installed globally, you can also run:
+
+```bash
+yb mcp
+youtubebrief-mcp
+```
+
+Do not use the shorter package-name-only npx form for MCP. Because this package has multiple binaries, use `npx -y --package @youtubebrief/cli@beta yb mcp` so npm knows which command to execute.
+
 ## What the MCP server is for
 
 Use it when an AI agent needs to turn explicit YouTube URLs or URL lists into files it can reference:
@@ -38,6 +47,8 @@ API keys must not appear in tool output, errors, manifests, or screenshots.
 ## Auth and client setup
 
 For paid tools, either run `yb login --token-stdin` before starting your MCP client, or configure the client to forward `YB_API_KEY` to the local stdio process. Do not put literal API keys in prompts, screenshots, GitHub issues, or shared config.
+
+Credits/API access may require beta access. During beta, prepaid minute access may be available depending on rollout stage; do not treat this as a full self-serve paid launch until live payment setup is explicitly confirmed.
 
 See:
 

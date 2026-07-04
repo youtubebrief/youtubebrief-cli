@@ -73,6 +73,16 @@ command = "npx"
 args = ["-y", "--package", "@youtubebrief/cli@beta", "yb", "mcp"]
 ```
 
+## `npx` says `could not determine executable to run`
+
+Use the explicit package form:
+
+```bash
+npx -y --package @youtubebrief/cli@beta yb mcp
+```
+
+The package exposes multiple binaries (`yb`, `youtubebrief`, and `youtubebrief-mcp`), so npm cannot always infer the executable from a package-name-only command.
+
 ## Credits or billing questions
 
 Open a beta credits issue or request access through:

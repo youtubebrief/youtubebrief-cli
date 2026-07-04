@@ -1,5 +1,7 @@
 # Youtubebrief CLI guide
 
+Browser for account and billing. Terminal for clean YouTube briefs.
+
 ## Install
 
 ```bash
@@ -19,11 +21,20 @@ yb doctor
 
 ## Common commands
 
+Login and check credits:
+
+```bash
+yb login
+yb credits
+```
+
 Create a single brief:
 
 ```bash
 yb brief "https://www.youtube.com/watch?v=..."
 ```
+
+The single-brief output is timestamp-backed Markdown for research, notes, and agent handoffs.
 
 Create a bundle from multiple URLs:
 
@@ -45,11 +56,9 @@ yb batch "https://youtu.be/LPZh9BOjkQs" --out-dir ./yb-out --dry-run
 
 If you use `examples/urls.txt`, replace the placeholder comments with explicit public YouTube URLs first.
 
-Create/sign in to a beta account:
+Script-safe API key login:
 
 ```bash
-yb login
-# or, for scripts:
 printf "%s\n" "$YB_API_KEY" | yb login --token-stdin
 ```
 
@@ -98,3 +107,5 @@ yb-out/
 Public npm install is available, but API key and credits access are handled through beta access:
 
 https://youtubebrief.com/beta
+
+Prepaid minute access may be available depending on rollout stage. Do not describe the beta as a full self-serve paid launch until live payment setup is explicitly confirmed.

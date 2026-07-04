@@ -1,14 +1,10 @@
 # Youtubebrief CLI/MCP
 
-**Youtubebrief CLI/MCP** turns explicit YouTube videos and URL lists into reproducible, agent-readable brief bundles for AI agents, RAG pipelines, DevRel teams, and research workflows.
+Browser for account and billing. Terminal for clean YouTube briefs.
 
-It is **not** a generic consumer YouTube summarizer. It is a developer tool for producing file-based outputs that agents can reuse safely:
+Youtubebrief turns explicit YouTube URLs into structured, timestamp-backed Markdown for research, notes, DevRel handoffs, and AI-agent workflows.
 
-- `manifest.json`
-- `combined.md`
-- `videos.jsonl`
-- per-video Markdown
-- per-video JSON
+It is **not** a generic consumer YouTube summarizer. It is a CLI/MCP beta for developers, researchers, DevRel teams, RAG pipelines, and local agent workflows.
 
 ## Install
 
@@ -19,13 +15,10 @@ npm install -g @youtubebrief/cli@beta
 ## Quick check
 
 ```bash
-yb
 yb --version
 yb --help
 yb doctor
 ```
-
-Running `yb` with no subcommand opens a Codex-style interactive setup flow in a real terminal. It prints and best-effort opens <https://youtubebrief.com/cli>, then guides account setup, API-key storage, credit checks, hosted checkout links when enabled for your account, a no-spend dry run, and Codex MCP setup commands. In CI, pipes, and other non-TTY hosts, it prints deterministic help and never opens a browser.
 
 Run without global install:
 
@@ -33,19 +26,70 @@ Run without global install:
 npx -y --package @youtubebrief/cli@beta yb --help
 ```
 
-No-spend bundle-shape check from a repo checkout:
+Release/marketing registry verification:
+
+```bash
+npm view @youtubebrief/cli@beta version --json
+```
+
+The source version in this repo is `0.1.0-beta.2`. If registry verification still returns `0.1.0-beta.1`, public npm install works but the npm beta channel is one patch behind this repository.
+
+## Login and credits
+
+```bash
+yb login
+yb credits
+```
+
+`yb` with no subcommand opens a Codex-style browser-assisted setup flow in a real terminal. It prints and best-effort opens <https://youtubebrief.com/cli>, then guides account setup, API-key storage, credit checks, and Codex MCP setup commands. In CI, pipes, and other non-TTY hosts, it prints deterministic help and never opens a browser.
+
+For scripts, store an API key without shell history exposure:
+
+```bash
+printf "%s\n" "$YB_API_KEY" | yb login --token-stdin
+```
+
+## Create a brief
+
+```bash
+yb brief "https://www.youtube.com/watch?v=..."
+```
+
+Brief output is Markdown-focused video analysis: title, source, TL;DR, section notes, and timestamp evidence.
+
+Credits/API access may be required for actual brief generation. During beta, access is handled through beta credits, prepaid minute packs, or operator-assisted rollout depending on availability. Do **not** treat this beta as a full self-serve paid launch until live payment setup is explicitly confirmed.
+
+Request beta access or credits:
+
+https://youtubebrief.com/beta
+
+## Batch bundles
+
+Create a no-spend bundle-shape check from a repo checkout:
 
 ```bash
 yb batch "https://youtu.be/LPZh9BOjkQs" --out-dir ./yb-out --dry-run
 ```
 
-`--dry-run` validates inputs and writes a planned `manifest.json` without calling the API or spending credits. If you use `examples/urls.txt`, replace the placeholder comments with explicit public YouTube URLs first.
-
-Release/marketing verification:
+When credits/API access is available, create a bundle from multiple explicit URLs:
 
 ```bash
-npm view @youtubebrief/cli@beta version --json
+yb batch --input examples/urls.txt --out-dir ./yb-out --combined-md --jsonl --allow-partial
 ```
+
+A batch bundle can include:
+
+```text
+yb-out/
+  manifest.json
+  combined.md
+  videos.jsonl
+  videos/
+    <video-id>.md
+    <video-id>.json
+```
+
+`manifest.json` is the source of truth for status, output paths, billing facts, and retry information.
 
 ## MCP local stdio
 
@@ -53,6 +97,18 @@ Youtubebrief ships a local stdio MCP server for Codex, Claude Code, Cursor-style
 
 ```bash
 npx -y --package @youtubebrief/cli@beta yb mcp
+```
+
+If the package is installed globally, this also works:
+
+```bash
+yb mcp
+```
+
+or:
+
+```bash
+youtubebrief-mcp
 ```
 
 ## Use with Codex MCP
@@ -82,20 +138,15 @@ Then open Codex and run:
 
 You should see the configured MCP server. See [`docs/codex-mcp.md`](docs/codex-mcp.md).
 
-## Current launch mode
-
-Youtubebrief CLI/MCP is in beta.
+## Current beta status
 
 - Public npm install is available.
-- Browser-assisted setup starts at <https://youtubebrief.com/cli>.
-- Credits/API access is handled through the beta access and credits request flow.
-- The interactive `yb` setup flow can create/sign in to a beta account and, when enabled for that account, print hosted checkout URLs from `yb buy <5|10|30|60>`.
 - Use `@beta` in install commands for now.
+- Browser-assisted setup starts at <https://youtubebrief.com/cli>.
+- Credits/API access may require beta access.
+- Prepaid minute access may be available depending on rollout stage.
+- Live payment availability may vary while beta payment setup is finalized.
 - Do not use it for undisclosed private or sensitive video workflows unless you understand the data handling model.
-
-Request beta credits:
-
-https://youtubebrief.com/beta
 
 ## Sample bundles
 
@@ -133,49 +184,18 @@ Use Youtubebrief when you need to turn public product demos, webinars, conferenc
 
 https://youtubebrief.com/use-cases/devrel-research
 
-## What this is not
-
-Youtubebrief CLI/MCP is not positioned as a generic consumer YouTube summarizer.
-
-It is built for:
-
-- AI agent workflows
-- MCP tool integrations
-- RAG data preparation
-- DevRel and docs workflows
-- competitive research from explicit public URLs
-
-## Status
-
-Source version in this repository:
-
-```text
-@youtubebrief/cli@0.1.0-beta.2
-```
-
-Published beta channel verification:
-
-```bash
-npm view @youtubebrief/cli@beta version --json
-```
-
-If the registry still returns `0.1.0-beta.1`, public install works but the npm package page is one patch behind this repository. Use the explicit `npx -y --package @youtubebrief/cli@beta yb mcp` form either way.
-
-Install with:
-
-```bash
-npm install -g @youtubebrief/cli@beta
-```
-
 ## Documentation
 
-- [CLI guide](https://github.com/youtubebrief/youtubebrief-cli/blob/main/docs/cli.md)
-- [MCP guide](https://github.com/youtubebrief/youtubebrief-cli/blob/main/docs/mcp.md)
-- [Codex MCP setup](https://github.com/youtubebrief/youtubebrief-cli/blob/main/docs/codex-mcp.md)
-- [RAG/JSONL workflows](https://github.com/youtubebrief/youtubebrief-cli/blob/main/docs/rag-jsonl.md)
-- [DevRel/research workflows](https://github.com/youtubebrief/youtubebrief-cli/blob/main/docs/devrel-research.md)
-- [Beta credits](https://github.com/youtubebrief/youtubebrief-cli/blob/main/docs/beta-credits.md)
-- [Troubleshooting](https://github.com/youtubebrief/youtubebrief-cli/blob/main/docs/troubleshooting.md)
+- [CLI guide](docs/cli.md)
+- [Login and credits](docs/login-and-credits.md)
+- [MCP guide](docs/mcp.md)
+- [Codex MCP setup](docs/codex-mcp.md)
+- [RAG/JSONL workflows](docs/rag-jsonl.md)
+- [DevRel/research workflows](docs/devrel-research.md)
+- [Samples](docs/samples.md)
+- [Beta access](docs/beta-access.md)
+- [Beta credits](docs/beta-credits.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
 ## Support
 
@@ -185,7 +205,7 @@ https://youtubebrief.com/beta
 
 For installation or MCP setup issues, open a GitHub issue in this repository.
 
-Report security issues to `contact@youtubebrief.com`. See [`SECURITY.md`](https://github.com/youtubebrief/youtubebrief-cli/blob/main/SECURITY.md). Do not include API keys, npm tokens, recovery codes, or private video data in issues.
+Report security issues to `contact@youtubebrief.com`. See [`SECURITY.md`](SECURITY.md). Do not include API keys, npm tokens, recovery codes, or private video data in issues.
 
 ## License
 
