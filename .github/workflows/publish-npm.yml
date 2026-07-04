@@ -1,0 +1,32 @@
+name: Publish npm beta
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Show tool versions
+        run: |
+          node --version
+          npm --version
+      - name: Verify package
+        run: npm run verify
+      - name: Run release gate
+        run: npm run release:gate
+      - name: Smoke packed artifact
+        run: npm run smoke:pack
+      - name: Publish to npm beta
+        run: npm publish --access public --tag beta --provenance
