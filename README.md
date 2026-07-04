@@ -1,18 +1,19 @@
-# Youtubebrief CLI/MCP
+# 🎬 Youtubebrief CLI/MCP
 
-Browser for account and billing. Terminal for clean YouTube briefs.
+🌐 Browser for account and billing.  
+⌨️ Terminal for clean YouTube briefs.
 
 Youtubebrief turns explicit YouTube URLs into structured, timestamp-backed Markdown for research, notes, DevRel handoffs, and AI-agent workflows.
 
 It is **not** a generic consumer YouTube summarizer. It is a CLI/MCP beta for developers, researchers, DevRel teams, RAG pipelines, and local agent workflows.
 
-## Install
+## 📦 Install
 
 ```bash
 npm install -g @youtubebrief/cli@beta
 ```
 
-## Quick check
+## ✅ Quick check
 
 ```bash
 yb --version
@@ -34,7 +35,7 @@ npm view @youtubebrief/cli@beta version --json
 
 The source version in this repo is `0.1.0-beta.2`. If registry verification still returns `0.1.0-beta.1`, public npm install works but the npm beta channel is one patch behind this repository.
 
-## Login and credits
+## 🔐 Login and credits
 
 ```bash
 yb login
@@ -49,7 +50,7 @@ For scripts, store an API key without shell history exposure:
 printf "%s\n" "$YB_API_KEY" | yb login --token-stdin
 ```
 
-## Create a brief
+## 📝 Create a brief
 
 ```bash
 yb brief "https://www.youtube.com/watch?v=..."
@@ -63,7 +64,7 @@ Request beta access or credits:
 
 https://youtubebrief.com/beta
 
-## Batch bundles
+## 🗂️ Batch bundles
 
 Create a no-spend bundle-shape check from a repo checkout:
 
@@ -91,7 +92,7 @@ yb-out/
 
 `manifest.json` is the source of truth for status, output paths, billing facts, and retry information.
 
-## MCP local stdio
+## 🔌 MCP local stdio
 
 Youtubebrief ships a local stdio MCP server for Codex, Claude Code, Cursor-style agents, and other MCP clients.
 
@@ -111,7 +112,7 @@ or:
 youtubebrief-mcp
 ```
 
-## Use with Codex MCP
+## 🤖 Use with Codex MCP
 
 Codex can connect to local stdio MCP servers. Add Youtubebrief as a Codex MCP server:
 
@@ -138,17 +139,17 @@ Then open Codex and run:
 
 You should see the configured MCP server. See [`docs/codex-mcp.md`](docs/codex-mcp.md).
 
-## Current beta status
+## 🚧 Current beta status
 
-- Public npm install is available.
-- Use `@beta` in install commands for now.
-- Browser-assisted setup starts at <https://youtubebrief.com/cli>.
-- Credits/API access may require beta access.
-- Prepaid minute access may be available depending on rollout stage.
-- Live payment availability may vary while beta payment setup is finalized.
-- Do not use it for undisclosed private or sensitive video workflows unless you understand the data handling model.
+- 📦 Public npm install is available.
+- 🧪 Use `@beta` in install commands for now.
+- 🌐 Browser-assisted setup starts at <https://youtubebrief.com/cli>.
+- 🔑 Credits/API access may require beta access.
+- 💳 Prepaid minute access may be available depending on rollout stage.
+- 🚧 Live payment availability may vary while beta payment setup is finalized.
+- 🔒 Do not use it for undisclosed private or sensitive video workflows unless you understand the data handling model.
 
-## Sample bundles
+## 📚 Sample bundles
 
 MCP/agent workflow:
 
@@ -164,27 +165,27 @@ https://youtubebrief.com/samples/devrel-research/manifest.json
 
 Local synthetic examples are also included under [`examples/sample-bundles/`](examples/sample-bundles/).
 
-## Use cases
+## 🧭 Use cases
 
-### AI agents and MCP
+### 🤖 AI agents and MCP
 
 Use Youtubebrief when you want Codex, Claude Code, Cursor-style agents, or other MCP clients to work with YouTube-derived context through files and manifests instead of pasting large transcripts into chat.
 
 https://youtubebrief.com/use-cases/mcp-agents
 
-### RAG and JSONL pipelines
+### 🧱 RAG and JSONL pipelines
 
 Use Youtubebrief when you want to normalize explicit YouTube videos or URL lists into JSONL and Markdown before indexing.
 
 https://youtubebrief.com/use-cases/youtube-to-jsonl-rag
 
-### DevRel and research
+### 🧪 DevRel and research
 
 Use Youtubebrief when you need to turn public product demos, webinars, conference talks, or tutorials into reusable documentation, FAQ, enablement, or research material.
 
 https://youtubebrief.com/use-cases/devrel-research
 
-## Documentation
+## 📖 Documentation
 
 - [CLI guide](docs/cli.md)
 - [Login and credits](docs/login-and-credits.md)
@@ -197,7 +198,7 @@ https://youtubebrief.com/use-cases/devrel-research
 - [Beta credits](docs/beta-credits.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
-## Support
+## 🛟 Support
 
 For beta credits, request access here:
 
@@ -207,6 +208,6 @@ For installation or MCP setup issues, open a GitHub issue in this repository.
 
 Report security issues to `contact@youtubebrief.com`. See [`SECURITY.md`](SECURITY.md). Do not include API keys, npm tokens, recovery codes, or private video data in issues.
 
-## License
+## 📄 License
 
 MIT. See [`LICENSE`](LICENSE).
