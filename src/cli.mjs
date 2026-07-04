@@ -15,6 +15,7 @@ import { buildBatchTelemetryProperties, sendTelemetryEvent, sendTelemetryEvents,
 
 export async function main(argv, io = {}) {
   const stdout = io.stdout || process.stdout;
+  const stderr = io.stderr || process.stderr;
   const stdin = io.stdin || process.stdin;
   const interactive = io.interactive ?? Boolean(stdin.isTTY && stdout.isTTY);
   const questioner = io.questioner;
@@ -42,7 +43,7 @@ export async function main(argv, io = {}) {
   if (parsed.command === 'batch') return batch(parsed, { stdin, stdout });
   if (parsed.command === 'export') return exportBundle(parsed, { stdout });
   if (parsed.command === 'schema') return schema(parsed, { stdout });
-  if (parsed.command === 'brief') return brief(parsed, { stdout });
+  if (parsed.command === 'brief') return brief(parsed, { stdout, stderr });
   throw new CliError(`Unknown command: ${parsed.command}`);
 }
 
@@ -496,15 +497,10 @@ async function configSet(options, { stdin, stdout }) {
   throw new CliError('Usage: yb config set base-url <url> | yb config set api-key --token-stdin | yb config set telemetry on|off');
 }
 
-async function brief(options, { stdout }) {
+async function brief(options, { stdout, stderr = process.stderr }) {
   const config = await resolveConfig(options);
   const client = new YoutubebriefClient(config);
-  const payload = await client.createBrief(options.youtubeUrl, {
-    wait: options.wait,
-    timeoutMs: options.timeoutMs,
-    pollIntervalMs: options.pollIntervalMs,
-    billingBlockMinutes: options.billingBlockMinutes,
-  });
+  const { payload, billingBlockMinutes } = await createBriefWithDefaultBlockFallback(client, options, { stderr });
   const content = formatPayload(payload, options.format);
   await writeOutput(content, options.output, { stdout, format: options.format });
   await sendTelemetryEvent('cli_brief', {
@@ -513,9 +509,51 @@ async function brief(options, { stdout }) {
     status: 'succeeded',
     result: 'success',
     authState: telemetryAuthState(config),
-    billingBlockMinutes: Number(options.billingBlockMinutes || 0),
+    billingBlockMinutes: Number(billingBlockMinutes || 0),
     hasOutDir: Boolean(options.output && options.output !== '-'),
   }, { config });
+}
+
+async function createBriefWithDefaultBlockFallback(client, options, { stderr = process.stderr } = {}) {
+  try {
+    return {
+      payload: await createBriefRequest(client, options, options.billingBlockMinutes),
+      billingBlockMinutes: options.billingBlockMinutes,
+    };
+  } catch (error) {
+    if (!shouldRetryDefaultBriefWithFiveMinuteBlock(error, options)) throw error;
+    const creditsPayload = await client.credits().catch(() => null);
+    const remainingMinutes = readRemainingMinutes(creditsPayload);
+    if (!Number.isFinite(remainingMinutes) || remainingMinutes < 5 || remainingMinutes >= 10) throw error;
+    stderr.write(`Only ${remainingMinutes} minutes are available, retrying this brief with --minutes 5.\n`);
+    return {
+      payload: await createBriefRequest(client, options, 5),
+      billingBlockMinutes: 5,
+    };
+  }
+}
+
+function createBriefRequest(client, options, billingBlockMinutes) {
+  return client.createBrief(options.youtubeUrl, {
+    wait: options.wait,
+    timeoutMs: options.timeoutMs,
+    pollIntervalMs: options.pollIntervalMs,
+    billingBlockMinutes,
+  });
+}
+
+function shouldRetryDefaultBriefWithFiveMinuteBlock(error, options) {
+  if (options.billingBlockMinutesExplicit || Number(options.billingBlockMinutes) !== 10) return false;
+  return /402|credits?|billing|insufficient|10-minute block/i.test(String(error?.message || error));
+}
+
+function readRemainingMinutes(payload) {
+  if (!payload || typeof payload !== 'object') return undefined;
+  if (Number.isFinite(payload.remainingMinutes)) return Number(payload.remainingMinutes);
+  if (Number.isFinite(payload.purchasedMinutes) && Number.isFinite(payload.consumedMinutes)) {
+    return Math.max(0, Number(payload.purchasedMinutes) - Number(payload.consumedMinutes));
+  }
+  return undefined;
 }
 
 

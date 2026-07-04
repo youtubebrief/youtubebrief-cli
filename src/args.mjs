@@ -142,7 +142,7 @@ function parseDoctor(args) {
 }
 
 function parseBrief(args) {
-  const result = { command: 'brief', format: 'markdown', wait: true };
+  const result = { command: 'brief', format: 'markdown', wait: true, billingBlockMinutesExplicit: false };
   const positionals = [];
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -152,7 +152,10 @@ function parseBrief(args) {
     else if (arg === '--base-url') result.baseUrl = readValue(args, ++index, arg);
     else if (arg === '--api-key') result.apiKey = readValue(args, ++index, arg);
     else if (arg === '--timeout-ms') result.timeoutMs = readInteger(args, ++index, arg);
-    else if (arg === '--minutes' || arg === '--block') result.billingBlockMinutes = readBillingMinutes(readValue(args, ++index, arg), arg);
+    else if (arg === '--minutes' || arg === '--block') {
+      result.billingBlockMinutes = readBillingMinutes(readValue(args, ++index, arg), arg);
+      result.billingBlockMinutesExplicit = true;
+    }
     else if (arg === '--poll-interval-ms') result.pollIntervalMs = readInteger(args, ++index, arg);
     else if (arg === '--wait') result.wait = true;
     else if (arg === '--no-wait') result.wait = false;

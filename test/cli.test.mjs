@@ -606,6 +606,81 @@ test("brief shortcut posts URL, follows resultUrl, and prints markdown", async (
   }
 });
 
+test("brief shortcut retries with a 5-minute block when the default 10-minute block exceeds balance", async () => {
+  const configDir = await tempConfigDir();
+  try {
+    await withMockApi(async (request) => {
+      if (request.method === "POST" && request.url === "/api/v1/summaries") {
+        assert.equal(request.headers.authorization, "Bearer env-token");
+        const body = JSON.parse(request.body);
+        if (body.billingBlockMinutes === 10) {
+          return {
+            status: 402,
+            body: { error: { code: "insufficient_credits", message: "This brief needs a 10-minute block. Buy minutes or choose a smaller block." } }
+          };
+        }
+        assert.deepEqual(body, { youtubeUrl: "https://youtu.be/LPZh9BOjkQs", billingBlockMinutes: 5 });
+        return { status: 201, body: summaryPayload() };
+      }
+      if (request.method === "GET" && request.url === "/api/v1/credits") {
+        assert.equal(request.headers.authorization, "Bearer env-token");
+        return { body: { purchasedMinutes: 5, consumedMinutes: 0, remainingMinutes: 5 } };
+      }
+      return { status: 404, body: { error: { code: "not_found", message: "missing" } } };
+    }, async ({ baseUrl, requests }) => {
+      const result = await runCli(["https://youtu.be/LPZh9BOjkQs"], {
+        configDir,
+        env: {
+          YOUTUBEBRIEF_BASE_URL: baseUrl,
+          YOUTUBEBRIEF_API_KEY: "env-token"
+        }
+      });
+      assert.equal(result.exitCode, 0, result.stderr);
+      assert.match(result.stderr, /retrying this brief with --minutes 5/);
+      assert.match(result.stdout, /# Large Language Models explained briefly/);
+      assert.deepEqual(
+        requests
+          .filter((request) => request.method === "POST" && request.url === "/api/v1/summaries")
+          .map((request) => JSON.parse(request.body).billingBlockMinutes),
+        [10, 5]
+      );
+    });
+  } finally {
+    await rm(configDir, { recursive: true, force: true });
+  }
+});
+
+test("brief respects an explicitly requested billing block instead of auto-retrying", async () => {
+  const configDir = await tempConfigDir();
+  try {
+    await withMockApi(async (request) => {
+      if (request.method === "POST" && request.url === "/api/v1/summaries") {
+        assert.deepEqual(JSON.parse(request.body), { youtubeUrl: "https://youtu.be/LPZh9BOjkQs", billingBlockMinutes: 10 });
+        return {
+          status: 402,
+          body: { error: { code: "insufficient_credits", message: "This brief needs a 10-minute block. Buy minutes or choose a smaller block." } }
+        };
+      }
+      return { status: 404, body: { error: { code: "not_found", message: "missing" } } };
+    }, async ({ baseUrl, requests }) => {
+      const result = await runCli(["brief", "https://youtu.be/LPZh9BOjkQs", "--minutes", "10"], {
+        configDir,
+        env: {
+          YOUTUBEBRIEF_BASE_URL: baseUrl,
+          YOUTUBEBRIEF_API_KEY: "env-token"
+        }
+      });
+      assert.equal(result.exitCode, 1);
+      assert.match(result.stderr, /10-minute block/);
+      assert.equal(result.stdout, "");
+      assert.equal(requests.filter((request) => request.method === "GET" && request.url === "/api/v1/credits").length, 0);
+      assert.equal(requests.filter((request) => request.method === "POST" && request.url === "/api/v1/summaries").length, 1);
+    });
+  } finally {
+    await rm(configDir, { recursive: true, force: true });
+  }
+});
+
 test("brief supports json output, output file, and async polling", async () => {
   const configDir = await tempConfigDir();
   const outputFile = join(configDir, "brief.json");
