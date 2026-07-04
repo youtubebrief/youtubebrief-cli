@@ -7,18 +7,19 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: read
-  issues: read
-  pull-requests: read
-  checks: read
-  actions: read
-  security-events: write
-  id-token: write
+permissions: read-all
 
 jobs:
   scorecard:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      checks: read
+      actions: read
+      security-events: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
