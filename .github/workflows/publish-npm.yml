@@ -2,8 +2,9 @@ name: Publish npm beta
 
 on:
   workflow_dispatch:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
@@ -22,6 +23,15 @@ jobs:
         run: |
           node --version
           npm --version
+      - name: Check tag matches package version
+        if: github.ref_type == 'tag'
+        run: |
+          package_version="v$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")"
+          if [ "${GITHUB_REF_NAME}" != "${package_version}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package version ${package_version}" >&2
+            exit 1
+          fi
+
       - name: Verify package
         run: npm run verify
       - name: Run release gate
