@@ -211,7 +211,7 @@ test("release:gate passes beta prepublish metadata and docs guards", async () =>
   const result = await runNodeScript(join(ROOT, "scripts", "release-gate.mjs"), []);
   assert.equal(result.exitCode, 0, result.stderr);
   const report = JSON.parse(result.stdout);
-  assert.deepEqual(report, { ok: true, package: "@youtubebrief/cli", version: "0.1.0-beta.4", tag: "beta" });
+  assert.deepEqual(report, { ok: true, package: "@youtubebrief/cli", version: "0.1.0-beta.4", tag: "beta", channel: "beta" });
 });
 
 test("help and version work without config or network", async () => {

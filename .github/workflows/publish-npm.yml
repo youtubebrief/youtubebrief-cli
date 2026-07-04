@@ -1,4 +1,4 @@
-name: Publish npm beta
+name: Publish npm package
 
 on:
   workflow_dispatch:
@@ -25,12 +25,22 @@ jobs:
         run: |
           node --version
           npm --version
+      - name: Resolve release channel
+        id: release
+        run: |
+          package_version="$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")"
+          publish_tag="latest"
+          if [[ "$package_version" == *-* ]]; then
+            publish_tag="beta"
+          fi
+          echo "package_version=$package_version" >> "$GITHUB_OUTPUT"
+          echo "publish_tag=$publish_tag" >> "$GITHUB_OUTPUT"
       - name: Check tag matches package version
         if: github.ref_type == 'tag'
         run: |
-          package_version="v$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")"
-          if [ "${GITHUB_REF_NAME}" != "${package_version}" ]; then
-            echo "Tag ${GITHUB_REF_NAME} does not match package version ${package_version}" >&2
+          package_tag="v${{ steps.release.outputs.package_version }}"
+          if [ "${GITHUB_REF_NAME}" != "${package_tag}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package version ${package_tag}" >&2
             exit 1
           fi
 
@@ -40,5 +50,5 @@ jobs:
         run: npm run release:gate
       - name: Smoke packed artifact
         run: npm run smoke:pack
-      - name: Publish to npm beta
-        run: npm publish --access public --tag beta --provenance
+      - name: Publish to npm
+        run: npm publish --access public --tag "${{ steps.release.outputs.publish_tag }}" --provenance

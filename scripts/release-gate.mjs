@@ -23,7 +23,10 @@ const BROKEN_NPX_MCP_PATTERNS = [
   /args\s*=\s*\[\"-y\",\s*\"@youtubebrief\/cli@beta\",\s*\"mcp\"\]/,
   /\[\s*['\"]-y['\"],\s*['\"]@youtubebrief\/cli@beta['\"],\s*['\"]mcp['\"]\s*\]/,
 ];
-const REQUIRED_NPX_MCP = 'npx -y --package @youtubebrief/cli@beta yb mcp';
+const REQUIRED_NPX_MCP_BY_CHANNEL = {
+  beta: 'npx -y --package @youtubebrief/cli@beta yb mcp',
+  stable: 'npx -y --package @youtubebrief/cli yb mcp',
+};
 
 const PUBLIC_SCAN_DIRS = ['test', 'examples'];
 const PUBLIC_SOURCE_SECRET_PATTERNS = [
@@ -42,6 +45,16 @@ function fail(message) {
 
 function assertEqual(actual, expected, label) {
   if (actual !== expected) fail(`${label}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+}
+
+function resolveReleaseChannel(version) {
+  if (/^0\.1\.0-beta\.\d+$/.test(version)) return 'beta';
+  if (/^\d+\.\d+\.\d+$/.test(version)) return 'stable';
+  fail(`package.version must be either a 0.1.0 beta prerelease or stable semver, got ${version}`);
+}
+
+function expectedNpmTagForChannel(channel) {
+  return channel === 'stable' ? 'latest' : 'beta';
 }
 
 function assertObjectIncludes(actual, expected, label) {
@@ -97,13 +110,12 @@ async function main() {
   const packageJson = JSON.parse(packageText);
 
   assertEqual(packageJson.name, EXPECTED_NAME, 'package.name');
-  if (!/^0\.1\.0-beta\.\d+$/.test(packageJson.version)) {
-    fail(`package.version must be a 0.1.0 beta prerelease, got ${packageJson.version}`);
-  }
+  const releaseChannel = resolveReleaseChannel(packageJson.version);
+  const expectedNpmTag = expectedNpmTagForChannel(releaseChannel);
   if (packageJson.private === true) fail('package.private must not be true for public beta publish');
   assertObjectIncludes(packageJson.bin, EXPECTED_BINS, 'package.bin');
   assertEqual(packageJson.publishConfig?.access, 'public', 'publishConfig.access');
-  assertEqual(packageJson.publishConfig?.tag, 'beta', 'publishConfig.tag');
+  assertEqual(packageJson.publishConfig?.tag, expectedNpmTag, 'publishConfig.tag');
   assertEqual(packageJson.publishConfig?.provenance, true, 'publishConfig.provenance');
   const repoUrl = String(packageJson.repository?.url || '');
   if (!repoUrl.includes('github.com/youtubebrief/youtubebrief-cli')) {
@@ -136,11 +148,17 @@ async function main() {
   if (!security.includes(packageJson.version)) fail('SECURITY.md must mention the source package version');
   if (!linkCheck.includes('curl -fsSL -o /dev/null')) fail('link-check workflow must use GET checks for sample JSON links');
   if (/curl\s+-fsSI/.test(linkCheck)) fail('link-check workflow must not use HEAD-only checks for sample JSON links');
-  if (!readme.includes('@youtubebrief/cli@beta')) fail('README must document beta-tag install commands');
-  if (!llms.includes('@youtubebrief/cli@beta')) fail('llms.txt must document beta-tag install commands');
+  if (releaseChannel === 'beta') {
+    if (!readme.includes('@youtubebrief/cli@beta')) fail('README must document beta-tag install commands');
+    if (!llms.includes('@youtubebrief/cli@beta')) fail('llms.txt must document beta-tag install commands');
+  } else {
+    if (!/npm install -g @youtubebrief\/cli(?!@)/.test(readme)) fail('README must document stable install commands without @beta');
+    if (!/npm install -g @youtubebrief\/cli(?!@)/.test(llms)) fail('llms.txt must document stable install commands without @beta');
+  }
+  const requiredNpxMcp = REQUIRED_NPX_MCP_BY_CHANNEL[releaseChannel];
   for (const [label, text] of [['README.md', readme], ['llms.txt', llms]]) {
-    if (!text.includes(REQUIRED_NPX_MCP)) {
-      fail(`${label} must document the explicit --package npx MCP command: ${REQUIRED_NPX_MCP}`);
+    if (!text.includes(requiredNpxMcp)) {
+      fail(`${label} must document the explicit --package npx MCP command: ${requiredNpxMcp}`);
     }
     for (const pattern of BROKEN_NPX_MCP_PATTERNS) {
       if (pattern.test(text)) fail(`${label} documents a broken multi-bin npx MCP command: ${pattern}`);
@@ -150,7 +168,7 @@ async function main() {
     }
   }
 
-  process.stdout.write(JSON.stringify({ ok: true, package: packageJson.name, version: packageJson.version, tag: packageJson.publishConfig.tag }, null, 2) + '\n');
+  process.stdout.write(JSON.stringify({ ok: true, package: packageJson.name, version: packageJson.version, tag: packageJson.publishConfig.tag, channel: releaseChannel }, null, 2) + '\n');
 }
 
 main().catch((error) => {
